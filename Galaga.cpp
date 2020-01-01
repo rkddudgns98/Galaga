@@ -24,6 +24,16 @@ int main() {
 			if (x > 28) x = 28;
 		}
 
+		if (GetAsyncKeyState(VK_UP) & 0x8000) {	//위쪽방향키
+			y--;
+			if (y < 0) y = 0;
+		}
+
+		if (GetAsyncKeyState(VK_DOWN) & 0x8000) {	//아래쪽방향키
+			y++;
+			if (y > 28) y = 28;
+		}
+
 		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {	//스페이스바
 			if (!bullet) {	//총알이 없을때
 				bx = x;		//총알의 x좌표
@@ -38,6 +48,7 @@ int main() {
 			by--;	//총알 이동
 			if (by < 0) bullet = false;	//화면을 벗어났을때 총알지우기
 		}
+
 		GotoXY(x, y);	//커서이동
 		printf("▲");	//비행기 출력
 
