@@ -4,7 +4,13 @@
 
 #include "Console.h"
 
-#define MAX 10
+#define MAX 30
+
+struct ST_ENEMY {	//적 구조체
+	int x = 0;
+	int y = 0;
+	bool bActive = false;
+};
 
 int main() {
 
@@ -14,9 +20,7 @@ int main() {
 
 	int bullet = 0, bx = 0, by = 0;	//총알의 좌표
 
-	int enemy_x[MAX] = { 0 };
-	int enemy_y[MAX] = { 0 };	//적의 좌표
-	bool enemy[MAX] = { false };
+	ST_ENEMY stEnemy[MAX];
 
 	srand(time(NULL));
 	
@@ -25,11 +29,11 @@ int main() {
 	while (1) {
 		Clear();	//잔상 지우기
 
-		for (int i = 0; i < MAX; i++) {
-			if (!enemy[i]) {
-				enemy_x[i] = (rand() % (width / 2)) * 2;
-				enemy_y[i] = 0;
-				enemy[i] = true;
+		for (int i = 0; i < MAX; i++) {	//적 수 늘리기
+			if (!stEnemy[i].bActive) {
+				stEnemy[i].x = (rand() % (width / 2)) * 2;	//적 위치 랜덤생성
+				stEnemy[i].y = 0;
+				stEnemy[i].bActive = true;
 				break;
 			}
 		}
@@ -70,11 +74,11 @@ int main() {
 		}
 
 		for (int i = 0; i < MAX; i++) {
-			if (enemy[i]) {	//적기
-				GotoXY(enemy_x[i], enemy_y[i]);
+			if (stEnemy[i].bActive) {	//적기
+				GotoXY(stEnemy[i].x, stEnemy[i].y);
 				printf("■");
-				enemy_y[i]++;
-				if (enemy_y[i] > length - 2) enemy[i] = false;
+				stEnemy[i].y++;
+				if (stEnemy[i].y > length - 2) stEnemy[i].bActive = false;
 			}
 		}
 
