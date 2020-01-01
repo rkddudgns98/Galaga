@@ -4,29 +4,34 @@
 
 #include "Console.h"
 
+#define MAX 10
+
 int main() {
 
-	int width = 30, length = 30;
+	int width = 30, length = 30;	//콘솔 사이즈
 
-	int x = 14, y = 28;	//처음 비행기좌표
+	int x = width - 2, y = length - 2;	//처음 비행기좌표
 
 	int bullet = 0, bx = 0, by = 0;	//총알의 좌표
 
-	int enemy_x = 0, enemy_y = 0;	//적의 좌표
-	bool enemy = false;
+	int enemy_x[MAX] = { 0 };
+	int enemy_y[MAX] = { 0 };	//적의 좌표
+	bool enemy[MAX] = { false };
 
 	srand(time(NULL));
 	
 	SetConsoleSize(width, length);	//콘솔창 사이즈 조절
 
 	while (1) {
-
 		Clear();	//잔상 지우기
 
-		if (!enemy) {
-			enemy_x = (rand() % (width / 2)) * 2;
-			enemy_y = 0;
-			enemy = true;
+		for (int i = 0; i < MAX; i++) {
+			if (!enemy[i]) {
+				enemy_x[i] = (rand() % (width / 2)) * 2;
+				enemy_y[i] = 0;
+				enemy[i] = true;
+				break;
+			}
 		}
 
 		if (GetAsyncKeyState(VK_LEFT) & 0x8000) {	//왼쪽방향키
@@ -64,11 +69,13 @@ int main() {
 			if (by < 0) bullet = false;	//화면을 벗어났을때 총알지우기
 		}
 
-		if (enemy) {	//적기
-			GotoXY(enemy_x, enemy_y);
-			printf("■");
-			enemy_y++;
-			if (enemy_y > length - 2) enemy = false;
+		for (int i = 0; i < MAX; i++) {
+			if (enemy[i]) {	//적기
+				GotoXY(enemy_x[i], enemy_y[i]);
+				printf("■");
+				enemy_y[i]++;
+				if (enemy_y[i] > length - 2) enemy[i] = false;
+			}
 		}
 
 		GotoXY(x, y);	//커서이동
