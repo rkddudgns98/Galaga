@@ -2,17 +2,15 @@
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
-
 #include "Console.h"
 
 #define MAX 50	//적기의 개수 = 난이도
-#define WIDTH 60		//4의 배수로 하세요
-#define LENGTH 40		
-#define BACKCOLOR 0
-#define OBJECTCOLOR 15
+#define WIDTH 60		//콘솔창의 가로길이 *4의 배수로 하세요*
+#define LENGTH 40		//콘솔창의 세로길이
+#define BACKCOLOR 0		//배경색
+#define OBJECTCOLOR 15	//OBJECT색
 
-int SCORE = 0;
-int bullet = 0, bx = 0, by = 0;
+int SCORE = 0; int B = 0;	//B=Bullet 배열 변수
 
 struct ST_OBJECT {	//적 구조체
 	int x = 0;
@@ -22,6 +20,7 @@ struct ST_OBJECT {	//적 구조체
 
 ST_OBJECT g_stEnemy[MAX];
 ST_OBJECT g_stPlayer;
+ST_OBJECT g_stBullet[MAX];
 
 void Init() {
 
@@ -29,6 +28,10 @@ void Init() {
 
 	SetTitle("Galaga");	//콘솔창 제목설정
 	SetColor(BACKCOLOR, OBJECTCOLOR);
+
+	g_stPlayer.x = WIDTH / 2, g_stPlayer.y = LENGTH - 2;	//처음 비행기좌표
+
+	g_stPlayer.bActive = true;	//목숨 on
 }
 
 void Spawn() {
@@ -41,7 +44,7 @@ void Spawn() {
 			break;
 		}
 	}
-}		//
+}	
 
 int EnemyProcess() {
 	int count = 0;
@@ -53,16 +56,17 @@ int EnemyProcess() {
 			GotoXY(g_stEnemy[i].x, g_stEnemy[i].y);
 			printf("☆");
 			g_stEnemy[i].y++;
-
-			if (bx == g_stEnemy[i].x) {	//적기가 총알을 맞았을때
-				if (by <= g_stEnemy[i].y) {
-					g_stEnemy[i].bActive = false;	//적기 목숨 off
-					bullet = false;
-					bx = g_stPlayer.x;		//총알의 x좌표
-					by = g_stPlayer.y;		//총알의 y좌표
+			for (int j = 0; j < MAX; j++) {
+				if (g_stBullet[j].x == g_stEnemy[i].x) {	//적기가 총알을 맞았을때
+					if (g_stBullet[j].y <= g_stEnemy[i].y) {
+						g_stEnemy[i].bActive = false;	//적기 목숨 off
+						g_stBullet[j].bActive = false;
+						g_stBullet[j].x = g_stPlayer.x;		//총알의 x좌표 초기화
+						g_stBullet[j].y = g_stPlayer.y;		//총알의 y좌표 초기화
+					}
 				}
 			}
-
+			
 			if (g_stEnemy[i].y == g_stPlayer.y) {	//충돌
 				if (g_stEnemy[i].x == g_stPlayer.x)	//(x,y)좌표 같을 때
 					g_stPlayer.bActive = false;	//목숨 off
@@ -116,6 +120,7 @@ void Score() {
 }
 
 void StartMenu() {
+	Init();
 	while (_kbhit()) _getch();
 
 	while (1) {
@@ -125,7 +130,7 @@ void StartMenu() {
 		GotoXY(2, LENGTH / 4);
 		printf("#조작:←↑↓→ 총알:SPACEBAR");
 		GotoXY(2, LENGTH / 3);
-		printf("#주의: 한번에 하나의 총알만 발사 할 수 있습니다");
+		printf("#주의:별에 부딪히면 게임이 종료됩니다");
 		GotoXY(2, LENGTH / 2);
 		printf("#Press any key");
 		Sleep(50);
@@ -163,42 +168,39 @@ bool ResultMenu() {
 }
 
 void Bullet() {
+	
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {	//스페이스바
-		if (!bullet) {	//총알이 없을때
-			bx = g_stPlayer.x;		//총알의 x좌표
-			by = g_stPlayer.y;	//총알의 y좌표
-			bullet = true;
-		}
-	}
-
-	if (bullet) {	//총알쏘기
-		GotoXY(bx, by);	//커서이동
-		
-		SetColor(BACKCOLOR, rand() % 15);
-		
-		printf("＊");	//총알쏘기
-		by--;	//총알 이동
-
-		if (g_stPlayer.bActive == false) {
-			bx = g_stPlayer.x;		//총알의 x좌표
-			by = g_stPlayer.y;		//총알의 y좌표 ;
-			bullet = false;
+			if (!g_stBullet[B].bActive) {	//총알이 없을때
+				g_stBullet[B].x = g_stPlayer.x;		//총알의 x좌표
+				g_stBullet[B].y = g_stPlayer.y;	//총알의 y좌표
+				g_stBullet[B].bActive = true;	//총알 on
+				B++;	//B번째 총알
+				if (B >= MAX) B = 0;
+			}
 		}
 
+	for (int i = 0; i < MAX; i++) {	//총알 여러발 쏘기
+		if (g_stBullet[i].bActive) {	//총알쏘기
+			GotoXY(g_stBullet[i].x, g_stBullet[i].y);	//커서이동
 
-		if (by < 0) bullet = false;	//화면을 벗어났을때 총알지우기
+			SetColor(BACKCOLOR, rand() % 15);
+
+			printf("＊");	//총알쏘기
+			g_stBullet[i].y--;	//총알 이동
+
+			if (g_stPlayer.bActive == false) {	//플레이어 사망
+				g_stBullet[i].x = g_stPlayer.x;		//총알의 x좌표
+				g_stBullet[i].y = g_stPlayer.y;		//총알의 y좌표 ;
+				g_stBullet[i].bActive = false;
+			}
+
+			if (g_stBullet[i].y < 0) g_stBullet[i].bActive = false;	//화면을 벗어났을때 총알지우기
+		}
 	}
 }
 
 void GameMain() {
 	int state = 0;	//게임상태 on off
-
-	SCORE = 0;
-
-	g_stPlayer.x = WIDTH / 2, g_stPlayer.y = LENGTH - 2;	//처음 비행기좌표
-
-	g_stPlayer.bActive = true;	//목숨 on
-
 	srand(time(NULL));
 
 	while (1) {
@@ -208,10 +210,10 @@ void GameMain() {
 			Spawn();	//적 생성
 
 			InputProcess();	//이동키
+
 		}
-		
 		Bullet();	//총알
-		
+
 		state = EnemyProcess();	//적 이동
 
 		Score();	//점수
@@ -225,8 +227,6 @@ void GameMain() {
 }
 
 int main() {
-
-	Init();	//initialize
 
 	while (1) {
 		StartMenu();
