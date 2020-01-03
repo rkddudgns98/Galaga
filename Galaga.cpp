@@ -153,6 +153,7 @@ bool ResultMenu() {
 		
 		if (GetAsyncKeyState('Y') & 0x8000) {
 			bRet = false;	//true이면 게임종료이니 false반환
+			SCORE = 0;
 			break;
 		}
 
